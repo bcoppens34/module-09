@@ -1,80 +1,107 @@
-const inquirer = require('inquirer');
-const fs = require('fs');
+// TODO: Include packages needed for this application
+const inquirer = require("inquirer");
+const fs = require("fs");
+const util = require("util");
+const generateReadMe = require("./utils/generateMarkdown");
+const writeFileAsync = util.promisify(fs.writeFile);
 
-// Array of questions for user input
+// TODO: Create an array of questions for user input
+// array of questions to use with inquirer 
 const questions = [
     {
-        type: 'input',
-        name: 'title',
-        message: 'Enter the project title:',
+        type: "input",
+        message: "What is the title for your project?",
+        name: "title"
     },
     {
-        type: 'input',
-        name: 'description',
-        message: 'Enter a project description:',
+        type: "input",
+        message: "Enter a brief description for your project",
+        name: "description"
     },
-    // Add more prompts for other sections (installation, usage, license, etc.)
-    // Customize the prompts based on the sections you want in the README
-];
+    {
+        type: "input",
+        message: "What is the command to install dependencies?",
+        name: "installation",
+        default: "npm i"
+    },
+    {
+        type: "input",
+        message: "Explain how the user can use your repository",
+        name: "usage"
+    },
+    {
+        type: "list",
+        message: "Select a license for your project",
+        name: "license",
+        choices: [
+            "MIT",
+            "Unlicense",
+            "Apache 2.0"
+        ]
+    },
+    {
+        type: "input",
+        message: "How can the user contribute to your repository?",
+        name: "contribute"
+    },
+    {
+        type: "input",
+        message: "What is the command to run tests?",
+        name: "tests",
+        default: "npm run test"
+    },
+    {
+        type: "input",
+        message: "Enter your GitHub user name",
+        name: "username"
+    },
+    {
+        type: "input",
+        message: "What is the URL for your GitHub profile?",
+        name: "profilelink"
+    },
+    {
+        type: "input",
+        message: "What is your email address?",
+        name: "email"
+    },
+]
 
-// Function to write README file
-function writeToFile(fileName, data) {
-    fs.writeFile(fileName, data, (err) => {
-        if (err) {
-            console.error(err);
-        } else {
-            console.log(`${fileName} file generated successfully!`);
-        }
-    });
+// function to prompt user - returns answers object
+const promptUser = () => {
+    return inquirer
+        .prompt(questions);
 }
 
-// Function to initialize app
-function init() {
-    inquirer
-        .prompt(questions)
-        .then((answers) => {
-            // Use the provided answers to structure the README content
-            const readmeContent = `
-# ${answers.title}
 
-## Description
-${answers.description}
+// TODO: Create a function to write README file
+function writeToFile(fileName, data) {
+    return writeFileAsync(fileName, data);
+}
 
-## Table of Contents
-- [Installation](#installation)
-- [Usage](#usage)
-- [License](#license)
-- [Contributing](#contributing)
-- [Tests](#tests)
-- [Questions](#questions)
+// TODO: Create a function to initialize app
+//function init() {}
 
-## Installation
-${answers.installation}
+const init = async () => {
+    try {
+        console.log("This is my README generator app.\nPlease answer the following questions:")
 
-## Usage
-${answers.usage}
+        // ask user for answers to questions
+        const answers = await promptUser();
 
-## License
-${answers.license}
+        // create markdown content from user answers
+        const fileContent = generateReadMe(answers);
 
-## Contributing
-${answers.contributing}
+        // write markdown content to README.md file
+        await writeToFile("./result/README.md", fileContent);
 
-## Tests
-${answers.tests}
+        // notify user that file has been written
+        console.log("The README.md file has been created in result folder.");
 
-## Questions
-If you have any questions, feel free to reach out:
-- GitHub: [${answers.github}](https://github.com/${answers.github})
-- Email: ${answers.email}
-            `;
-
-            // Write the generated content to a README file
-            writeToFile('README.md', readmeContent);
-        })
-        .catch((error) => {
-            console.error(error);
-        });
+    } catch (err) {
+        console.error("Error. File not created.");
+        console.log(err);
+    }
 }
 
 // Function call to initialize app
